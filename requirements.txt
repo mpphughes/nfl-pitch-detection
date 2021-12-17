@@ -1,0 +1,6 @@
+opencv-python==4.1.1.26
+pandas
+numpy
+matplotlib
+typing
+scikit-image
