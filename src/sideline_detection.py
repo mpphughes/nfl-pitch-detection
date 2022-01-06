@@ -10,10 +10,13 @@ output_pth = './test/'
 #HoughLinesP is used to find the sideline. Adjust the parameters for better performance.
 rho = 1  # distance resolution in pixels of the Hough grid
 theta = np.pi / 180  # angular resolution in radians of the Hough grid
-threshold = 100  # minimum number of votes (intersections in Hough grid cell)
-min_line_length = 50  # minimum number of pixels making up a line
-max_line_gap = 25  # maximum gap in pixels between connectable line segments
+#threshold = 100  # minimum number of votes (intersections in Hough grid cell)
+#min_line_length = 50  # minimum number of pixels making up a line
+#max_line_gap = 25  # maximum gap in pixels between connectable line segments
 
+threshold = 150  # minimum number of votes (intersections in Hough grid cell)
+min_line_length = 200  # minimum number of pixels making up a line
+max_line_gap = 25
 ##############
 
 def run_sideline_detection(pth):

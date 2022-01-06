@@ -83,7 +83,8 @@ def image_preprocessing(img, save_pth_bw_images=None):
     # Extract field greens from HV image
     hsv_img = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
 
-    light_green = (50, 75, 100)
+    # light_green =(50, 75, 100)
+    light_green = (25, 50, 75)
     dark_green = (100, 200, 200)
 
     mask = cv2.inRange(hsv_img, light_green, dark_green)
@@ -233,12 +234,10 @@ def draw_lower_sideline(line_image, line, line_lst, h_l_lst, boundary):
     found = False
     lower = min(line[1], line[3])
     upper = max(line[1], line[3])
-    if upper == False:
-        if lower > boundary:
-            on_field = True
-    elif upper == True:
-        if upper < boundary:
-            on_field = True
+
+    if lower > boundary:
+        on_field = True
+
     for line2 in line_lst:
         if line2 not in h_l_lst:
             for line2 in line_lst:
@@ -270,7 +269,7 @@ def find_lower_sidelines(lines, bw):
             if line[1] < 950 or line[3] < 950:
                 line_image, found = draw_lower_sideline(
                     line_image, line, line_lst, h_l_lst,
-                    boundary=upper_boundary, upper=True)
+                    boundary=upper_boundary)#, upper=True)
 
     return line_image, found
 
