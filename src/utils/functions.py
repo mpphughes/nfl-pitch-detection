@@ -73,6 +73,7 @@ def is_arr_in_list(myarr, list_arrays):
     return next((True for elem in list_arrays if elem is myarr), False)
 
 
+
 def image_preprocessing(img, save_pth_bw_images=None):
     """
     Preprocess frames for canny edge detection.
@@ -124,17 +125,8 @@ def run_hough(edges_img, rho, theta, threshold, min_line_length, max_line_gap):
             cv2.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 5)
     return lines, line_image
 
-def draw_sideline(lines, img):
-    """
-    Draws top (upper most sideline)
-    :param lines: HoughLinesP result
-    :param img: A line image of sideline
-    :return:
-    """
-    h_l, v_l = segment_lines(lines, 90)
-    line_image = np.copy(img) * 0
-    line_image = line_image + 255
-    found = False
+def line_preparation(lines):
+    h_l, v_l = segment_lines(lines, 80)
 
     h_l_lst = []
     for line in h_l:
@@ -145,10 +137,6 @@ def draw_sideline(lines, img):
         line_lst.append([v for v in line[0]])
 
     v_values = []
-
-    # Find where majority of lines are present in image. Aim is to identify
-    # where yard lines are on image then we know sideline cannot be in the
-    # same space as a yard line!
     for line2 in line_lst:
         if line2 not in h_l_lst:
             start = min(line2[1], line2[3])
@@ -156,8 +144,30 @@ def draw_sideline(lines, img):
             v_values.append([i for i in range(start, end)])
 
     v_values_all = [v for sublst in v_values for v in sublst]
-    upper_boundary = np.percentile(np.array(v_values_all), 90)
-    lower_boundary = np.percentile(np.array(v_values_all), 10)
+    try:
+        upper_boundary = np.percentile(np.array(v_values_all), 90)
+    except:
+        upper_boundary = 0
+
+    try:
+        lower_boundary = np.percentile(np.array(v_values_all), 10)
+    except:
+        lower_boundary = 1080
+    return h_l_lst, line_lst, lower_boundary, upper_boundary
+
+def draw_upper_sideline(lines, img):
+    """
+    Draws top (upper most sideline)
+    :param lines: HoughLinesP result
+    :param img: A line image of sideline
+    :return:
+    """
+
+    line_image = np.copy(img) * 0
+    line_image = line_image + 255
+
+    h_l_lst, line_lst, lower_boundary, upper_boundary = line_preparation(lines)
+
     found = False
     for line in h_l_lst:
         if line[1] < 600 and line[3] < 600:
@@ -189,55 +199,13 @@ def draw_sideline(lines, img):
     return line_image, found
 
 
-def line_preparation(lines):
-    """
-    helper function
-    :param lines:
-    :return:
-    """
-    h_l, v_l = segment_lines(lines, 80)
-
-    h_l_lst = []
-    for line in h_l:
-        h_l_lst.append([v for v in line[0]])
-
-    line_lst = []
-    for line in lines:
-        line_lst.append([v for v in line[0]])
-
-    v_values = []
-    for line2 in line_lst:
-        if line2 not in h_l_lst:
-            start = min(line2[1], line2[3])
-            end = max(line2[1], line2[3])
-            v_values.append([i for i in range(start, end)])
-
-    v_values_all = [v for sublst in v_values for v in sublst]
-    upper_boundary = np.percentile(np.array(v_values_all), 90)
-    lower_boundary = np.percentile(np.array(v_values_all), 10)
-
-    return h_l_lst, line_lst, lower_boundary, upper_boundary
-
-
 def draw_lower_sideline(line_image, line, line_lst, h_l_lst, boundary):
-    """
-    Find and draw lower sideline using same but inverted principle as for upper
-    sideline
-    :param line_image:
-    :param line:
-    :param line_lst:
-    :param h_l_lst:
-    :param boundary:
-    :return:
-    """
     on_field = False
     found = False
     lower = min(line[1], line[3])
     upper = max(line[1], line[3])
-
-    if lower > boundary:
+    if upper < boundary:
         on_field = True
-
     for line2 in line_lst:
         if line2 not in h_l_lst:
             for line2 in line_lst:
@@ -254,22 +222,23 @@ def draw_lower_sideline(line_image, line, line_lst, h_l_lst, boundary):
             found = True
             cv2.line(line_image, (int(line[0]), int(line[1])),
                      (int(line[2]), int(line[3])), (0, 0, 0), 5)
+    print('f', on_field)
     return line_image, found
 
 
 def find_lower_sidelines(lines, bw):
-    h_l_lst, line_lst, lower_boundary, upper_boundary = line_preparation(lines)
     line_image = np.copy(bw) * 0
     line_image = line_image + 255
+
+    h_l_lst, line_lst, lower_boundary, upper_boundary = line_preparation(lines)
+
     found = False
-    # Search for bottom sideline
+    # Search for lower sideline
     for line in h_l_lst:
         if line[1] > 600 and line[3] > 600:
-            # Ensure line is not from watermark (score board).
-            if line[1] < 950 or line[3] < 950:
+            if line[1] < 920 or line[3] < 920:
                 line_image, found = draw_lower_sideline(
                     line_image, line, line_lst, h_l_lst,
-                    boundary=upper_boundary)#, upper=True)
+                    boundary=upper_boundary)
 
     return line_image, found
-

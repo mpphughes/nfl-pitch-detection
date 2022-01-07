@@ -44,7 +44,7 @@ def extract_best_ransac_line(np_image,original, lower=False):
     and creates a new image in with this line imposed on image.
     """
     image,width,height=read_image_array_as_cartesian_data_points(np_image)
-    x, y=find_line(image,width,height)
+    x, y=find_line(image,width)
 
     # For poly fill find the correct order to plot polygon
     if x[np.argmax(y)] > x[np.argmin(y)]:
@@ -56,9 +56,9 @@ def extract_best_ransac_line(np_image,original, lower=False):
 
     # Offset the line slightly so that field markings remain visible
     if lower == False:
-        offset_factor = 35
+        offset_factor = 0
     else:
-        offset_factor = -35
+        offset_factor = -0
     contours = np.array([[0, 0],
                          [original.shape[1], 0],
                          [original.shape[1], outer_y-offset_factor],
@@ -71,7 +71,9 @@ def extract_best_ransac_line(np_image,original, lower=False):
     # Polyfill above or below line depending on which sideline is found
     if lower == False:
         cv2.fillPoly(original, pts=[contours], color=(0, 0, 0))
+        contours_used = contours
     else:
         cv2.fillPoly(original, pts=[contours_lower], color=(0, 0, 0))
-    return original
+        contours_used = contours_lower
+    return original, contours_used
 
