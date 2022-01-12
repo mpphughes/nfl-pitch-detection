@@ -17,7 +17,7 @@ for frame in sorted(frame_nums):
 
 size =(frames[0].shape[1], frames[0].shape[0])
 
-out = cv2.VideoWriter('result.avi', cv2.VideoWriter_fourcc(*'DIVX'), 15,
+out = cv2.VideoWriter('result.avi', cv2.VideoWriter_fourcc(*'DIVX'), 30,
                       size)
 for i in range(len(frames)):
     out.write(frames[i])
